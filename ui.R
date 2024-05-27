@@ -31,14 +31,26 @@ ui <- dashboardPage(skin="green",
       br(),
       tags$div(
         style = "padding: 10px; text-align: center;",
+        tags$img(src = "dinosaur-fossil.png", height = "90px"),
+      ),
+      br(),
+      br(),
+      tags$div(
+        style = "padding: 20px; text-align: center;",
         tags$img(src = "PP_monogram.png", height = "90px"),
-      )
+      ), br(),
+      br(),
+      tags$div(
+        style = "padding: 10px; text-align: center;",
+        tags$img(src = "dinosaur-fossil.png", height = "90px"),
+      ),
+      
     )
   ),
   dashboardBody(
     tabItems(
       tabItem(tabName = "overview",
-              h2("Overview"),
+              h2("Overview", style = "text-align: center;"),
               fluidRow(
                 valueBoxOutput("total_species"),
                 valueBoxOutput("total_types"),
@@ -52,71 +64,80 @@ ui <- dashboardPage(skin="green",
                      
                     
                      
-                     fluidRow(title = "Select Dinosaur Period",
-                       column(width = 3,
-                              
-                              checkboxGroupInput("period_filter", label = NULL, 
-                                                 choices = c("Jurassic", "Cretaceous", "Triassic"),
-                                                 selected = c("Jurassic", "Cretaceous", "Triassic")
-                                                 )
-                       ),
+                     fluidRow(title = "Select Dinosaur Period", 
+                              column(width=3, 
+                                   fluidRow(
+                                     box(title="Select the period that the dinosaurs have lived in:", status="success",
+                                                width=NULL,
+                                       collapsible = T, style = "margin-left: 5px;",
+                                          
+                                          checkboxGroupInput("period_filter", label = NULL, 
+                                                             choices = c("Jurassic", "Cretaceous", "Triassic"),
+                                                             selected = c("Jurassic", "Cretaceous", "Triassic")
+                                                             )
+                                   )),
+                                   fluidRow(box(title="Select the diet that the dinosaurs  have been on:", status="success",
+                                                width=NULL,
+                                       collapsible = T, style = "margin-left: 5px;",
+                                       
+                                       checkboxGroupInput("diet_filter", label = NULL, 
+                                                          choices = c("carnivorous", "herbivorous", "omnivorous"),
+                                                          selected = c("carnivorous", "herbivorous", "omnivorous"),
+                                       )
+                                   )),offset = 0,),
                        column(width = 9,
-                              leafletOutput("map", height = 500)
-                     )
+                              leafletOutput("map", height = 500), offset = 0                     )
                 )
                   
                   
                     
                   
                 )
-                #box(
-                  #width = 4,
-                  #title = "Select Dinosaur Diet",
-                 # checkboxGroupInput("diet_filter", label = NULL, 
-                #                     choices = unique(dino_data$diet), 
-                 #                    selected = unique(dino_data$diet))
-                #)
+               
               )
               
       ),
       tabItem(tabName = "details",
-              fluidRow(
-                box(
-                  width = 6,
+              h2("Find your dinosaur!", style = "text-align: center;"),
+              h3("Click to learn more!", style = "text-align: center;"),
+              box(width = NULL, status="success", fluidRow(
+                box(status="info",
+                  width = 4,
                   title = "Select places of origin",
                   selectInput("region", label = NULL, choices = c("All regions", unique(dino_data$lived_in)))
                 ),
-                box(
-                  width = 3,
+                box(status="info",
+                  width = 4,
                   title = "Select dinosaur diets",
-                  checkboxGroupInput("dino_diet", label = NULL, choices = c("carnivorous", "herbivorous", "omnivorous"), selected = c("carnivorous", "herbivorous", "omnivorous"), inline = TRUE)
+                  checkboxGroupInput("dino_diet", label = NULL, choices = c("carnivorous", "herbivorous", "omnivorous"), selected = c("carnivorous", "herbivorous", "omnivorous"))
                 ),
-                box(
-                  width = 3,
+                box(status="info",
+                  width = 4,
                   title = "Select period of dinosaur living",
-                  checkboxGroupInput("dino_period", label = NULL, choices = c("Jurassic", "Cretaceous", "Triassic"), selected = c("Jurassic", "Cretaceous", "Triassic"), inline = TRUE)
+                  checkboxGroupInput("dino_period", label = NULL, choices = c("Jurassic", "Cretaceous", "Triassic"), selected = c("Jurassic", "Cretaceous", "Triassic"))
                 )
               ),
               fluidRow(
-                box(
+                box(status="info",
                   width = 12,
                   title = "Choose dinosaur length",
                   sliderInput("dino_length", label = NULL, min = 0, max = ifelse(is.numeric(max(dino_data$length, na.rm = TRUE)), max(dino_data$length, na.rm = TRUE), 100), value = c(0, ifelse(is.numeric(max(dino_data$length, na.rm = TRUE)), max(dino_data$length, na.rm = TRUE), 100)), step = 0.5)
                 )
               ),
               fluidRow(
-                box(
+                box(status="info",
                   width = 12,
-                  title = "FIND YOUR DINOSAUR! Click to learn more!",
+                  
                   DTOutput('table')
                 )
-              )),
+              ))),
       tabItem(tabName = "leng",
-              h2("Length of the dinosaurs"),
-              fluidRow(
+              h2("Length of the dinosaurs", style = "text-align: center;"),
+              box(width = NULL, status="success",collapsible = T,  fluidRow(
                 box(
                   width=12,
-                  title="Distribution of length by:",
+                  title="Distribution of length by:", 
+                  div(style = "text-align: center;",
                   
                   radioButtons("attribute4", label=NULL,
                                choices = c("Diet" = "diet", 
@@ -124,7 +145,7 @@ ui <- dashboardPage(skin="green",
                                            "Dinosaur type" = "type"),
                                
                                inline=TRUE)
-                )),
+                ))),
               
               fluidRow(
                 box(
@@ -132,18 +153,22 @@ ui <- dashboardPage(skin="green",
                   width=12,
                   
                   plotlyOutput("violinPlot")
-                )),
+                ))),
               br(),
               br(),
-              br(),
-              fluidRow(
-                box(
-                  width=12,
-                  title="Select Period:",
-                  radioButtons("attribute3", label=NULL,
-                               choices = c("Jurassic", "Cretaceous", "Triassic"),
-                               inline=TRUE)
-                )),
+              
+              box(width = NULL, status="success",collapsible = T,
+                  fluidRow(
+                    box(
+                      width = 12,
+                      title = "Select Period:",
+                      div(style = "text-align: center;",
+                          radioButtons("attribute3", label = NULL,
+                                       choices = c("Jurassic", "Cretaceous", "Triassic"),
+                                       inline = TRUE)
+                      )
+                    )
+                  ),
               
               fluidRow(
                 box(
@@ -151,13 +176,14 @@ ui <- dashboardPage(skin="green",
                   width=12,
                   
                   plotlyOutput("interactivePlot")
-                )
-              ), br(),
+                ))
+              ), 
+              br(),
               br(),
     ),
     tabItem(tabName = "diet",
-            h2("Diet of the dinosaurs"),
-            fluidRow(
+            h2("Diet of the dinosaurs", style = "text-align: center;"),
+            box(width = NULL, status="success", fluidRow(
               box(
                 width=12,
                 title="Select Attribute and Value:",
@@ -178,13 +204,14 @@ ui <- dashboardPage(skin="green",
               box(
                 width=12,
                 plotlyOutput("pieChart")
-              ))
+              )))
     ),
     tabItem(tabName = "TYPES",
-            h2("Types"),
+            h2("Types of the dinosaurs", style = "text-align: center;"),
+            box(width = NULL, status="success",
             fluidRow(
               box(
-                width=6,
+                width=12,
                 title="Select Period:",
                 checkboxGroupInput("attribute1", label = NULL, 
                                    choices = c("Cretaceous", "Jurassic", "Triassic"), 
@@ -198,7 +225,7 @@ ui <- dashboardPage(skin="green",
                 plotlyOutput("barChart")
               )
             )
-  )
+  ))
 )
 )
 )
