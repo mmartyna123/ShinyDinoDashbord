@@ -18,7 +18,7 @@ library(shinythemes)
 # Load the dataset
 ## DATA PREPARATION ######################################################
 # Load the dataset
-dino_data <- read_csv("data.csv")
+dino_data <- read.csv("data.csv")
 
 # Define color palettes
 palette <- c("#291C4A", "#5C2A7A", "#9A3790", "#E55799", "#FA8D6D", "#FEB84C", "#FBE8C5")
@@ -53,9 +53,9 @@ dino_data$period_years_ago <- sapply(split_period, function(x) x[3])
 
 
 # Replace NA values in new columns with empty strings
-#dino_data$period_stage[is.na(dino_data$period_stage)] <- ""
-#dino_data$period_name[is.na(dino_data$period_name)] <- ""
-#dino_data$period_years_ago[is.na(dino_data$period_years_ago)] <- ""
+dino_data$period_stage[is.na(dino_data$period_stage)] <- ""
+dino_data$period_name[is.na(dino_data$period_name)] <- ""
+dino_data$period_years_ago[is.na(dino_data$period_years_ago)] <- ""
 
 
 # Change the 'length' column into numeric values
@@ -93,7 +93,7 @@ server <- function(input, output, session) {
   })
   
   output$total_periods <- renderValueBox({
-    valueBox(value = length(na.omit(unique(dino_data$period_name))), subtitle = "Number of periods", icon = icon("clock"), color = "green")
+    valueBox(value = length(stri_omit_empty(unique(dino_data$period_name), na_empty = FALSE)), subtitle = "Number of periods", icon = icon("clock"), color = "green")
   })
   
   
@@ -103,7 +103,9 @@ server <- function(input, output, session) {
   output$map <- renderLeaflet({
     req(input$period_filter)
     
-    dino_fitered <- dino_data[dino_data$period_name %in% input$period_filter,]
+    dino_fitered <- dino_data[(dino_data$period_name %in% input$period_filter) &
+                              (dino_data$diet %in% input$diet_filter),]
+    
     dino_fitered <- dino_fitered %>% filter(!is.na(lived_in))
     
     dino_counts <- dino_fitered %>%
@@ -136,20 +138,31 @@ server <- function(input, output, session) {
   
   # Species Details tab
   output$table <- renderDT({
-    if(input$region != "All regions") {
-      filtered_data <- dino_for_table[(dino_for_table$`Lived In` == input$region) &
-                                        (dino_for_table$Diet %in% input$dino_diet) &
-                                        (dino_for_table$Period %in% input$dino_period) &
-                                        (dino_for_table$`Length(m)` >= input$dino_length[1]) &
-                                        (dino_for_table$`Length(m)` <= input$dino_length[2]),  
-      ]
+    
+    if (length(input$dino_diet) == 0) {
+      filtered_data <- dino_for_table[dino_for_table$Diet %in% input$dino_diet, ]
+      
     } else {
-      filtered_data <- dino_for_table[(dino_for_table$Diet %in% input$dino_diet) &
-                                        (dino_for_table$Period %in% input$dino_period) &
-                                        (dino_for_table$`Length(m)` >= input$dino_length[1]) &
-                                        (dino_for_table$`Length(m)` <= input$dino_length[2]),  
-      ]
-    }
+    
+      diet_pattern <- paste(input$dino_diet, collapse = "|")
+      
+      if (input$region != "All regions") {
+        filtered_data <- dino_for_table[
+          (dino_for_table$`Lived In` == input$region | is.na(dino_for_table$`Lived In`)) &
+            (grepl(diet_pattern, dino_for_table$Diet) | is.na(dino_for_table$Diet)) &
+            (dino_for_table$Period %in% input$dino_period | is.na(dino_for_table$Period)) &
+            (!is.na(dino_for_table$`Length(m)`) & dino_for_table$`Length(m)` >= input$dino_length[1]) &
+            (!is.na(dino_for_table$`Length(m)`) & dino_for_table$`Length(m)` <= input$dino_length[2]),
+        ]
+      } else {
+        filtered_data <- dino_for_table[
+          (grepl(diet_pattern, dino_for_table$Diet) | is.na(dino_for_table$Diet)) &
+            (dino_for_table$Period %in% input$dino_period | is.na(dino_for_table$Period)) &
+            (!is.na(dino_for_table$`Length(m)`) & dino_for_table$`Length(m)` >= input$dino_length[1]) &
+            (!is.na(dino_for_table$`Length(m)`) & dino_for_table$`Length(m)` <= input$dino_length[2]),
+        ]
+      }
+      }
     
     datatable(filtered_data, 
               options = list(rowCallback = JS(
@@ -170,7 +183,7 @@ server <- function(input, output, session) {
       HTML(paste("Name:", dino_data[input$selected_row, "name"],
                  "<br>Species:", dino_data[input$selected_row, "species"],
                  "<br>Type:", dino_data[input$selected_row, "type"],
-                 "<br>Lived", dino_data[input$selected_row, "period_years_ago"], "million years ago",
+                 "<br>Lived:", dino_data[input$selected_row, "period_years_ago"], "million years ago",
                  "<br><br>Great choice! You have a great taste in dinosaurs :)",
                  "<br><br>If you're interested in more information, you'll find it here:<br>",
                  '<a href="', dino_data[input$selected_row, "link"], '" target="_blank">', 
@@ -381,10 +394,3 @@ server <- function(input, output, session) {
     
   })
 }
-
-
-
-
-
-
-
